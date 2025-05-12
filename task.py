@@ -1,10 +1,10 @@
 class Task:
     '''
-        The Task class represents the maintenance of one engine, done by one team.
+        The Task class represents one engine's maintenance, which is performed by a single team.
     '''
-    def __init__(self, engine_id, rul):
-        self.engine_id = engine_id
-        self.rul = rul
+    def __init__(self, engine_identifier, remaining_useful_life):
+        self.engine_id = engine_identifier
+        self.rul = remaining_useful_life
         self.duration = 0
         self.start_time = 0
         self.end_time = 0

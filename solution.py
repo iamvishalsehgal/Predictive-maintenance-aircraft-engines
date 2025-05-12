@@ -4,9 +4,9 @@ import constants
 
 class Solution:
     '''
-        This class represents a solution to the problem.
-        A solution consists of a list of four teams, each team has a plan, which is a sequence of tasks.
-        Teams 1 and 3 are of type A, teams 2 and 4 are of type B.
+        The problem is solved by this class.
+         Four teams make up the solution, and each team has a plan, which is a list of tasks.
+         Teams two and four belong to type B, while teams one and three belong to type A.
     '''
     def __init__(self):
         self.teams = []
@@ -21,149 +21,142 @@ class Solution:
     def __repr__(self):
         return f'{self.teams}, {self.total_cost}'
     
-    def add_team(self, team):
-        self.teams.append(team)
+    def add_team(self, team_obj):
+        self.teams.append(team_obj)
 
-    def add_task_to_random_team(self, task):
+    def add_task_to_random_team(self, task_obj):
         '''
-            Adds a task to a random team in a smart way. We want the workload of the teams to be balanced as much as possible.
-            Therefore, we want to avoid situations where some teams have a lot of tasks and others have only a few. 
-            We do this by only allowing a task to be added to a team if the duration of the team is not too much larger than the minimum duration of all teams.
+            cleverly assigns a task to a random team.  We want the teams' workloads to be as evenly distributed as possible.
+             As a result, we want to steer clear of scenarios in which some teams have a large number of tasks while others have a small number. 
+             To achieve this, we only permit a task to be added to a team if the team's duration is not significantly longer than the minimum duration required for all teams.
         '''
         team_found = False
         while not team_found:
-            best_team = random.randint(0, len(self.teams) - 1)
-            if self.teams[best_team].duration <= self.min_duration + constants.RANDOM_INSERTION_MAXIMUM_INBALANCE:
+            best_team_idx = random.randint(0, len(self.teams) - 1)
+            if self.teams[best_team_idx].duration <= self.min_duration + constants.RANDOM_INSERTION_MAXIMUM_INBALANCE:
                 team_found = True
-                self.teams[best_team].add_task(task)
+                self.teams[best_team_idx].add_task(task_obj)
     
-    def add_task(self, task, team_index):
+    def add_task(self, task_obj, team_index):
         '''
-            Adds a task to a specific team.
+            assigns a task to a particular group.
         '''
-        if self.task_planned(task):
+        if self.task_planned(task_obj):
             self.teams[team_index].add_empty_task()
         else:
-            self.teams[team_index].add_task(task)
+            self.teams[team_index].add_task(task_obj)
 
         # Recompute the cost of the task.
-        self.calculate_cost(task)
+        self.calculate_cost(task_obj)
     
-    def task_planned(self, task):
+    def task_planned(self, task_obj):
         '''
-            Check if a task is already planned in one of the teams. This is important to avoid planning the same task multiple times.
+            Verify if one of the teams has a task scheduled already.  Preventing the same task from being planned more than once is crucial.
         '''
-        for team in self.teams:
-            for planned_task in team.plan:
-                if planned_task.engine_id == task.engine_id:
+        for team_obj in self.teams:
+            for planned_task_obj in team_obj.plan:
+                if planned_task_obj.engine_id == task_obj.engine_id:
                     return True
         return False
 
-    def calculate_cost(self, task):
-        task.cost = 0
-        if task.days_late <= 0:
+    def calculate_cost(self, task_obj):
+        task_obj.cost = 0
+        if task_obj.days_late <= 0:
             return 0
         
-        for day in range(1, task.days_late + 1):
-            cj = 0
-            if 1 <= task.engine_id <= 25:
-                cj = 4
-            elif 26 <= task.engine_id <= 45:
-                cj = 2
-            elif 46 <= task.engine_id <= 75:
-                cj = 5
+        for day_num in range(1, task_obj.days_late + 1):
+            cost_factor = 0
+            if 1 <= task_obj.engine_id <= 25:
+                cost_factor = 4
+            elif 26 <= task_obj.engine_id <= 45:
+                cost_factor = 2
+            elif 46 <= task_obj.engine_id <= 75:
+                cost_factor = 5
             else:  # 76-100
-                cj = 6
+                cost_factor = 6
                 
-            daily_cost = cj * (day ** 2)
-            task.cost += min(daily_cost, constants.MAX_DAILY_COST)
-        return task.cost
+            daily_cost = cost_factor * (day_num ** 2)
+            task_obj.cost += min(daily_cost, constants.MAX_DAILY_COST)
+        return task_obj.cost
 
     def calculate_total_cost(self):
         '''
-            This method calculates the total cost of the solution. It does this by calculating the cost of each task and summing them.
-            Additionally, it calculates the duration of each team and the minimum and maximum duration of all teams.
-            It starts by sorting the tasks on RUL, because it is always optimal to plan the tasks with increasing RUL.
-        '''
+            This approach determines the solution's overall cost.  It accomplishes this by adding up the costs of all the tasks.
+             It also determines the minimum and maximum durations for all teams as well as the duration of each team.
+             Since it is always best to plan tasks with increasing RUL, it begins by sorting the tasks according to RUL.        '''
         self.sort_tasks_on_RUL()
         self.total_cost = 0
 
-        for team in self.teams:
-            start = 1
-            for task in team.plan:
-                task.cost = 0
-                task.duration = self.calculate_duration(team.type, task.engine_id)
-                task.start_time = start
-                start += task.duration
-                task.end_time = start - 1
-                task.days_late = max(task.end_time - task.rul, 0)
-                task.cost = self.calculate_cost(task)
-                self.total_cost += task.cost     
-            team.duration = start - 1
+        for team_obj in self.teams:
+            start_day = 1
+            for task_obj in team_obj.plan:
+                task_obj.cost = 0
+                task_obj.duration = self.calculate_duration(team_obj.type, task_obj.engine_id)
+                task_obj.start_time = start_day
+                start_day += task_obj.duration
+                task_obj.end_time = start_day - 1
+                task_obj.days_late = max(task_obj.end_time - task_obj.rul, 0)
+                task_obj.cost = self.calculate_cost(task_obj)
+                self.total_cost += task_obj.cost     
+            team_obj.duration = start_day - 1
 
         self.min_duration = float('inf')
         self.max_duration = 0
 
-        for team in self.teams:
-            if team.duration < self.min_duration:
-                self.min_duration = team.duration
-            if team.duration > self.max_duration:
-                self.max_duration = team.duration
+        for team_obj in self.teams:
+            if team_obj.duration < self.min_duration:
+                self.min_duration = team_obj.duration
+            if team_obj.duration > self.max_duration:
+                self.max_duration = team_obj.duration
         
         return self.total_cost
 
-    def calculate_duration(self, type, engine_id):
-
-        mu_a = 0
-        if 1 <= engine_id <= 20:
-            mu_a = 5
-        elif 21 <= engine_id <= 55:
-            mu_a = 3
-        elif 56 <= engine_id <= 80:
-            mu_a = 4
+    def calculate_duration(self, team_type, engine_identifier):
+        maintenance_time_a = 0
+        if 1 <= engine_identifier <= 20:
+            maintenance_time_a = 5
+        elif 21 <= engine_identifier <= 55:
+            maintenance_time_a = 3
+        elif 56 <= engine_identifier <= 80:
+            maintenance_time_a = 4
         else:  # 81-100
-            mu_a = 5
+            maintenance_time_a = 5
             
-        if type == 'A':
-            return mu_a
-        elif type == 'B':
-            if 1 <= engine_id <= 25:
-                return mu_a - 1
-            elif 26 <= engine_id <= 70:
-                return mu_a + 3
+        if team_type == 'A':
+            return maintenance_time_a
+        elif team_type == 'B':
+            if 1 <= engine_identifier <= 25:
+                return maintenance_time_a - 1
+            elif 26 <= engine_identifier <= 70:
+                return maintenance_time_a + 3
             else:  # 71-100
-                return mu_a + 2
+                return maintenance_time_a + 2
 
-    def fix_solution(self, unplanned_tasks):
+    def fix_solution(self, unplanned_tasks_list):
         '''
-            This method fixes a solution by adding the unplanned tasks to the teams. 
-            It does this in three steps: 
-                1) First, by filling the gaps in the plans of the teams with the unplanned tasks.
-                2) Then, by adding the remaining tasks to a random team while keeping the workload of the teams balanced.
-                3) Finally, by removing the remaining empty tasks that were added in step 1, if they stil exist.
-        '''
-        # Step 1: Fill the gaps in the plans of the teams with the unplanned tasks.
-        for team in self.teams:
-            for task in team.plan:
-                if task.engine_id < 0:
-                    if len(unplanned_tasks) > 0:
-                        unplanned_task = unplanned_tasks.pop()
-                        task.engine_id = unplanned_task.engine_id
-                        task.rul = unplanned_task.rul
+            This method improves a solution by incorporating unplanned tasks into the teams' schedules. It does this in three steps: First, it fills any gaps or empty spots in the existing team plans with the unplanned tasks. Then, it assigns the remaining unplanned tasks to randomly selected teams while ensuring that the overall workload remains balanced. Finally, it removes any empty tasks that were added during the first step, in case they still remain.        '''
+        # Step 1: Use the unplanned jobs to fill up the gaps in the teams' plans.
+        for team_obj in self.teams:
+            for task_obj in team_obj.plan:
+                if task_obj.engine_id < 0:
+                    if len(unplanned_tasks_list) > 0:
+                        unplanned_task_obj = unplanned_tasks_list.pop()
+                        task_obj.engine_id = unplanned_task_obj.engine_id
+                        task_obj.rul = unplanned_task_obj.rul
 
-        # Step 2: Add the remaining tasks to a random team while keeping the workload of the teams balanced.
-        for unplanned_task in unplanned_tasks:
-            self.add_task_to_random_team(unplanned_task)
+        # Step 2: Assign the remaining tasks to a randomly selected team while maintaining a balanced burden for each team.
+        for unplanned_task_obj in unplanned_tasks_list:
+            self.add_task_to_random_team(unplanned_task_obj)
 
-        # Step 3: Remove the remaining empty tasks that were added in step 1, if they stil exist.
-        for team in self.teams:
-            new_plan = [task for task in team.plan if task.engine_id >= 0]
-            team.plan = new_plan
+        # Step 3: If any empty tasks that were added in step 1 are still there, remove them.
+        for team_obj in self.teams:
+            new_plan = [task_obj for task_obj in team_obj.plan if task_obj.engine_id >= 0]
+            team_obj.plan = new_plan
                 
     def sort_tasks_on_RUL(self):
         '''
-            For this puzzle it is important to observe that it is always optimal to plan the tasks with increasing RUL.
-            This method is used to sort the tasks in the plan on RUL, for all the teams.
+            Observing that it is always best to organize the jobs with increasing RUL is crucial for this puzzle.
+             Using this strategy, all teams' tasks in the RUL plan are sorted.
         '''
-        for team in self.teams:
-            team.sort_tasks_on_RUL()
+        for team_obj in self.teams:
+            team_obj.sort_tasks_on_RUL()

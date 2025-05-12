@@ -1,100 +1,98 @@
 from team import Team
-from task import Task
+import json
 from solution import Solution
+import constants
+import random
+from task import Task
 from population import Population
 import pandas as pd
-import random
-import json
-import constants
-
-def choose_consultancy_dataset(choice):
+def choose_consultancy_dataset(use_consultancy):
     '''
-        Choose the consultancy dataset or the predicted RULs dataset.
-        If choice is True, the consultancy dataset is chosen, else the predicted RULs dataset is chosen.
+        Select either the anticipated RULs dataset or the consultancy dataset.
+         The consulting dataset is selected if use_consultancy is True; if not, the projected RULs dataset is selected.
     '''
-    if choice == True:
-        # Read the consultancy predictions from a CSV file
+    if use_consultancy == True:
+        # Read consultancy predictions 
         df_consultancy_predictions = pd.read_csv('RUL_consultancy_predictions_A3.csv', sep=';')
         df_consultancy_predictions = df_consultancy_predictions.sort_values(by='RUL', ascending=True)
         
-        all_tasks_A3 = []
-        for engine_id in df_consultancy_predictions.id.unique():
-            if df_consultancy_predictions[df_consultancy_predictions.id == engine_id].RUL.values[0] < constants.MAX_PLAN_DURATION:
-                task = Task(engine_id, df_consultancy_predictions[df_consultancy_predictions.id == engine_id].RUL.values[0])
-                all_tasks_A3.append(task)
-        return all_tasks_A3
+        all_tasks_consultancy = []
+        for engine_identifier in df_consultancy_predictions.id.unique():
+            if df_consultancy_predictions[df_consultancy_predictions.id == engine_identifier].RUL.values[0] < constants.MAX_PLAN_DURATION:
+                task_obj = Task(engine_identifier, df_consultancy_predictions[df_consultancy_predictions.id == engine_identifier].RUL.values[0])
+                all_tasks_consultancy.append(task_obj)
+        return all_tasks_consultancy
     else:
-        # The path to the file containing the predicted RULs
+        
         file_path = 'predicted_RUL_dict.txt'
 
         with open(file_path, 'r') as file:
             json_string = file.read()
 
-        # Parse the JSON string into a Python dictionary
+        # Parse JSON into a dictionary
         prediction_data = json.loads(json_string)
         all_tasks_prediction = []
-        for engine_id, rul in prediction_data.items():
-            if rul < constants.MAX_PLAN_DURATION:
-                task = Task(int(engine_id), rul)
-                all_tasks_prediction.append(task)
+        for engine_id_str, rul_value in prediction_data.items():
+            if rul_value < constants.MAX_PLAN_DURATION:
+                task_obj = Task(int(engine_id_str), rul_value)
+                all_tasks_prediction.append(task_obj)
         return all_tasks_prediction
 
-def run_genetic_algorithm_x_times(runs):
+def run_genetic_algorithm_x_times(num_runs):
     '''
-        Run the Genetic Algorithm a number of times and print the average cost of the best solution over the runs.
+        Print the average cost of the optimal solution after running the Genetic Algorithm several times.
     '''
-    # Run the Genetic Algorithm 30 times to see how the algorithm performs on average.
+    # To see the average performance of the Genetic Algorithm, run it 30times.
     total_costs = 0
     times_score_of_30 = 0
-    for i in range(runs):
-        # Start the algorithm, by creating a population of solutions and running the Genetic Algorithm.
-        population = Population(constants.POPULATION_SIZE, all_tasks)
-        population.initialize()
-        population.calculate_all_costs()
+    for run_idx in range(num_runs):
+        # For 100 generations, run the genetic algorithm.  Therefore, the number of generations is the determining requirement.
+        population_obj = Population(constants.POPULATION_SIZE, all_tasks)
+        population_obj.initialize()
+        population_obj.calculate_all_costs()
 
-        population.print_population_statistics()
+        population_obj.print_population_statistics()
     
-        # Run the Genetic Algorithm for 100 generations. So, the determination condition is the number of generations.
-        for i in range(constants.NUMBER_OF_ITERATIONS):
-            # Every iteration a new generation is created, based on the current population.
-            population.create_next_generation()
-            population.calculate_all_costs()
-            population.print_population_statistics()
+        # For 100 generations, run the genetic algorithm.  Therefore, the number of generations is the determining requirement.
+        for gen_idx in range(constants.NUMBER_OF_ITERATIONS):
+            # Based on the current population, a new generation is produced with each repetition.
+            population_obj.create_next_generation()
+            population_obj.calculate_all_costs()
+            population_obj.print_population_statistics()
         
-        best_solution = population.give_best_feasiible_solution()
+        best_solution = population_obj.give_best_feasiible_solution()
         total_costs += best_solution.total_cost
         if best_solution.total_cost == 30:
             times_score_of_30 += 1
     
-    # Print the average cost of the best solution over the 30 runs.
-    print('Average best cost:', total_costs / runs)
+    # Print the best solution's average cost over the course of 30 runs.
+    print('Average best cost:', total_costs / num_runs)
     print('Times score of 30:', times_score_of_30)
-    return population
+    return population_obj
 
 def convert_best_solution_to_csv(best_solution):
     '''
-        Convert the best solution to a CSV file, which can be used to submit the solution to the consultancy.
+        To submit the solution to the consultancy, convert the best solution into a CSV file.
     '''
-    df = pd.DataFrame()
-    for team in best_solution.teams:
-        for task in team.plan:
-            csv_data = {'Team': [team.name], 'Type': [team.type], 'DaysOfWork': [team.duration], 'EngineID': [task.engine_id], 'RUL': [task.rul], 'StartDay': [task.start_time], 'EndDay': [task.end_time], 'DaysLate': [task.days_late], 'Cost': [task.cost]}
-            df = pd.concat([df, pd.DataFrame(data=csv_data)], ignore_index=True)
-    df.to_csv('BestSolution.csv', index=False, sep=';' )
+    results_df = pd.DataFrame()
+    for team_obj in best_solution.teams:
+        for task_obj in team_obj.plan:
+            csv_data = {'Team': [team_obj.name], 'Type': [team_obj.type], 'DaysOfWork': [team_obj.duration], 'EngineID': [task_obj.engine_id], 'RUL': [task_obj.rul], 'StartDay': [task_obj.start_time], 'EndDay': [task_obj.end_time], 'DaysLate': [task_obj.days_late], 'Cost': [task_obj.cost]}
+            results_df = pd.concat([results_df, pd.DataFrame(data=csv_data)], ignore_index=True)
+    results_df.to_csv('BestSolution.csv', index=False, sep=';' )
 
 if __name__ == '__main__':
     '''
-        This is the main function of the program. It reads the predicted RULs from a file, creates a population of solutions and runs the Genetic Algorithm.
-    '''
-    # Now decide which RUL values to use for the Genetic Algorithm, either the predicted RULs or the consultancy predictions.
-    # To choose the consultancy predictions, set the parameter to True, else set it to False.
+This is the program's primary purpose.  It generates a population of solutions, executes the Genetic Algorithm, and reads the predicted RULs from a file.    '''
+    # Choose between using the consultancy's predictions or the predicted RULs for the Genetic Algorithm.
+    # Set the parameter to True or False to select the consultancy predictions.
     all_tasks = choose_consultancy_dataset(True)
     
-    population = run_genetic_algorithm_x_times(1)
+    population_obj = run_genetic_algorithm_x_times(1)
 
-    # Finally, we print the solution to this optimalization problem. 
-    best_solution = population.give_best_feasiible_solution()
+    # Lastly, we print the optimalization problem's solution.
+    best_solution = population_obj.give_best_feasiible_solution()
     print(best_solution)
 
-    # Extract the results in a csv file. The file is saved in the data folder with the name BestSolution.csv.
+    # The results are extracted into a CSV file.  The BestSolution.csv file is stored in the data folder.
     convert_best_solution_to_csv(best_solution)
