@@ -1,7 +1,7 @@
 jupyter
-pandas
-matplotlib
+scipy
 scikit-learn
+pandas
 seaborn
 numpy
-scipy
+matplotlib
