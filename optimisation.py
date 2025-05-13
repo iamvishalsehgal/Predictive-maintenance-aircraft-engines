@@ -3,7 +3,6 @@ import pandas as pd
 import random
 import copy
 
-# Constants from constants.py
 RANDOM_INSERTION_MAXIMUM_INBALANCE = 5
 ELITISM_SIZE = 10
 MAX_DAILY_COST = 250
@@ -13,7 +12,6 @@ NUMBER_OF_ITERATIONS = 100
 POPULATION_SIZE = 100
 MAX_PLAN_DURATION = 30
 
-# Task class from task.py
 class Task:
     '''
     Represents maintenance of one engine handled by a single team.
@@ -30,7 +28,6 @@ class Task:
     def __repr__(self):
         return f'({self.engine_id}, {self.rul}, {self.start_time}, {self.end_time}, {self.days_late}, {self.cost})'
 
-# Team class from team.py
 class Team:
     '''
     Represents a set of tasks planned for one team
@@ -64,7 +61,6 @@ class Team:
         ''' 
         self.plan = sorted(self.plan, key=lambda task_obj: task_obj.rul, reverse=False)
 
-# Solution class from solution.py
 class Solution:
     '''
     Solves the problem using four teams, each with a task plan; teams 1 & 3 are type A, teams 2 & 4 are type B
@@ -205,7 +201,6 @@ class Solution:
         for team_obj in self.teams:
             team_obj.sort_tasks_on_RUL()
 
-# Population class from population.py
 class Population:
     '''
     This class optimizes team planning using a Genetic Algorithm, with a population of solutions. The size parameter sets the population size, all_tasks contains tasks to be planned, and best_score tracks the best score.
@@ -358,7 +353,6 @@ class Population:
                 return solution_obj
         return None
 
-# Functions from main.py
 def choose_consultancy_dataset(use_consultancy):
     '''
     Select either the anticipated RULs dataset or the consultancy dataset based on the use_consultancy flag.
