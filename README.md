@@ -1,6 +1,6 @@
 # Predictive Maintenance Scheduling for Airplane Engines
 
-This project focuses on predicting the Remaining Useful Lifetime (RUL) of airplane engines and optimizing their maintenance schedules using predictive analytics and optimization techniques. It was developed as part of the JM1000: Prescriptive Algorithms course (Assignment 3, 2024-2025).
+This project focuses on predicting the Remaining Useful Lifetime (RUL) of airplane engines and optimizing their maintenance schedules using predictive analytics and optimization techniques.
 
 ## Project Overview
 
